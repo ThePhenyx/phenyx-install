@@ -179,6 +179,8 @@ cat <<'EOF'
      docker compose up -d
      docker compose ps
 
-Si más adelante quieres cambiar puertos, URL pública, contraseñas u otro
-dato, vuelve a ejecutar este mismo script.
+Si más adelante quieres cambiar el puerto del frontend, el JWT_SECRET o la
+configuración de la base de datos, vuelve a ejecutar este mismo script. La
+contraseña del usuario admin no se puede cambiar así una vez creado el
+usuario: hazlo desde la propia aplicación.
 EOF

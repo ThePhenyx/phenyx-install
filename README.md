@@ -141,7 +141,7 @@ docker compose ps
 - `phenyx-frontend`, `phenyx-backend`, `phenyx-rodaskernel`, y
 - `phenyx-db` **solo** si elegiste BD incluida.
 
-> **¿Necesitas cambiar puertos, URL pública, contraseña…?** Vuelve a ejecutar `install.sh` / `install.ps1`. Guarda un backup del `docker-compose.yml` anterior y luego haz `docker compose up -d` para aplicar la nueva configuración.
+> **¿Necesitas cambiar el puerto del frontend, el `JWT_SECRET` o la configuración de la base de datos?** Vuelve a ejecutar `install.sh` / `install.ps1` (el generador guarda un backup automático del `docker-compose.yml` anterior) y luego haz `docker compose up -d` para aplicar la nueva configuración. La contraseña del usuario admin **no** se puede cambiar por esta vía una vez creado el usuario: hazlo desde la propia aplicación.
 
 ---
 
