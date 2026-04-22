@@ -10,7 +10,7 @@ if [[ ! -f "$TEMPLATE" ]]; then
   exit 1
 fi
 
-echo "=== Generador de docker-compose.yml para Phenyx ==="
+echo "=== Generador de docker-compose.yml para Phenyx Health ==="
 echo
 
 missing=()

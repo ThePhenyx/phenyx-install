@@ -10,7 +10,7 @@ if (-not (Test-Path $Template)) {
     exit 1
 }
 
-Write-Host "=== Generador de docker-compose.yml para Phenyx ==="
+Write-Host "=== Generador de docker-compose.yml para Phenyx Health ==="
 Write-Host ""
 
 $missing = @()

@@ -1,6 +1,6 @@
-# Phenyx — Instalación en hospital
+# Phenyx Health — Instalación en hospital
 
-Este paquete instala la plataforma **Phenyx** (frontend + backend + rodaskernel + Postgres opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
+Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + Postgres opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
 
 > **Importante:** sigue los pasos **en orden**. El único paso automatizado es la generación del `docker-compose.yml`; todo lo demás son comandos que tú ejecutas y revisas.
 
