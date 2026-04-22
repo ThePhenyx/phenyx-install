@@ -1,0 +1,54 @@
+services:
+  phenyxfrontend:
+    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthfrontend:latest
+    container_name: phenyx-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      - phenyxback
+
+  phenyxback:
+    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthbackend:latest
+    container_name: phenyx-backend
+    restart: unless-stopped
+    environment:
+      - APP_NAME=phenyxdb-backend
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - NODE_ENV=${NODE_ENV}
+      - GRPC_SERVICE=rodaskernel:81
+      - JWT_SECRET=${JWT_SECRET}
+      - DEFAULT_USER_NAME=${DEFAULT_USER_NAME}
+      - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}
+    # No publica puerto al host: el frontend lo alcanza por la red interna
+    # de Docker Compose (http://phenyxback:8080) vía el proxy /api/ de Nginx.
+    depends_on:
+      - rodaskernel
+# >>> PHENYX_DB_DEPENDS_START
+      - phenyxdb
+# <<< PHENYX_DB_DEPENDS_END
+
+  rodaskernel:
+    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthrodaskernel:latest
+    container_name: phenyx-rodaskernel
+    restart: unless-stopped
+    volumes:
+      - ./phenyx-rodaskernel:/tmp
+
+# >>> PHENYX_DB_BLOCK_START
+  phenyxdb:
+    image: postgres:13
+    container_name: phenyx-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    volumes:
+      - ./phenyx-db-data:/var/lib/postgresql/data
+# <<< PHENYX_DB_BLOCK_END
