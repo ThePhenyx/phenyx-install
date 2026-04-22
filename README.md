@@ -1,6 +1,8 @@
 # Phenyx Health — Instalación en hospital
 
-Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + Postgres opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
+Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + PostgreSQL opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
+
+> **Motor de base de datos:** Phenyx Health requiere **PostgreSQL** (14 o superior recomendada). Puedes usar la instancia Postgres que despliega este paquete en un contenedor, o apuntar a un servidor PostgreSQL propio del hospital. Otros motores (MySQL, MariaDB, SQL Server, Oracle…) no están soportados.
 
 > **Importante:** sigue los pasos **en orden**. El único paso automatizado es la generación del `docker-compose.yml`; todo lo demás son comandos que tú ejecutas y revisas.
 
@@ -88,9 +90,9 @@ Preguntas que te hará:
 
   > **Aviso (contraseña en claro):** la contraseña que introduzcas queda **guardada en claro** dentro del `docker-compose.yml` generado (variable `DEFAULT_USER_PASSWORD`). Protege ese fichero (permisos restrictivos, copias de seguridad cifradas) y cambia la contraseña desde la aplicación tras el primer login.
 
-- **Base de datos** — elige entre:
+- **Base de datos** — el backend **solo soporta PostgreSQL** (versión 14 o superior recomendada). Otros motores (MySQL, MariaDB, SQL Server, Oracle…) **no** son compatibles. Elige entre:
   - **Incluida** (Postgres en un contenedor): la opción por defecto, para piloto/preproducción. No se publica puerto en el host; si necesitas conectarte con un cliente SQL, ver la sección **Conectarse a la BD incluida desde fuera**.
-  - **Propia**: te pedirá `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`. En ese caso el `docker-compose.yml` **no** incluirá el servicio `phenyxdb`.
+  - **Propia**: un servidor **PostgreSQL** que mantiene el hospital. Te pedirá `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`. En ese caso el `docker-compose.yml` **no** incluirá el servicio `phenyxdb`.
 
 El script solo **crea el fichero**. No arranca nada todavía.
 
@@ -177,6 +179,7 @@ No hace falta volver a ejecutar `install.sh` salvo que quieras cambiar algún da
 
 Si elegiste **BD propia** en el Paso 1:
 
+- **Debe ser PostgreSQL** (14 o superior recomendada). El backend no soporta otros motores.
 - El `docker-compose.yml` no incluye el servicio `phenyxdb` ni lo referencia en el `depends_on` del backend.
 - El usuario SQL que proporcionaste necesita privilegios para **crear tablas e índices** en la base de datos indicada (o equivalente; el esquema lo aplica el backend al arrancar).
 - Si la base de datos ya contiene datos de una instalación previa, contáctanos antes de arrancar: puede requerir migración.
