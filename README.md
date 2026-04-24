@@ -27,7 +27,8 @@ El navegador de cada usuario habla únicamente con el frontend. Nginx (dentro de
 │        nginx                      └─► phenyxdb           │
 │    /api/ → phenyxback:8080            o BD propia *      │
 │                                                          │
-│   Red interna de Docker Compose — nada sale al host      │
+│   Solo phenyxfrontend publica puerto en el host;         │
+│   el resto queda dentro de la red interna de Docker      │
 └──────────────────────────────────────────────────────────┘
 
   * Si usas BD propia del hospital, `phenyxdb` no se despliega y
