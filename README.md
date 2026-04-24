@@ -17,7 +17,7 @@ El navegador de cada usuario habla únicamente con el frontend. Nginx (dentro de
 ```
   Navegador del usuario (PC del hospital)
        │
-       │ http(s)    (única URL pública: la del frontend)
+       │ http(s)    (único puerto público: el del frontend)
        ▼
 ┌──────────────────────────────────────────────────────────┐
 │  Servidor Docker del hospital                            │
@@ -174,7 +174,7 @@ Cuando publiquemos una nueva versión de las imágenes:
    docker compose ps
    ```
 
-No hace falta volver a ejecutar `install.sh` salvo que quieras cambiar algún dato (URL pública, contraseña de BD, etc.).
+No hace falta volver a ejecutar `install.sh` salvo que quieras cambiar algún dato (puerto público, contraseña de BD, etc.).
 
 ---
 
