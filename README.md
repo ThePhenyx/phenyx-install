@@ -94,6 +94,8 @@ Preguntas que te hará:
   - **Incluida** (Postgres en un contenedor): la opción por defecto, para piloto/preproducción. No se publica puerto en el host; si necesitas conectarte con un cliente SQL, ver la sección **Conectarse a la BD incluida desde fuera**.
   - **Propia**: un servidor **PostgreSQL** que mantiene el hospital. Te pedirá `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`. En ese caso el `docker-compose.yml` **no** incluirá el servicio `phenyxdb`.
 
+  > **Aviso (credenciales de BD en claro):** los datos de conexión a la base de datos (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y, en particular, `DB_PASS`) quedan **guardados en claro** dentro del `docker-compose.yml` generado, tanto si usas el Postgres incluido como si apuntas a un servidor propio del hospital. Protege el fichero (permisos restrictivos, copias de seguridad cifradas, no subirlo a repositorios) y, si usas BD propia, usa un usuario de BD con privilegios limitados a la base de datos de Phenyx Health.
+
 El script solo **crea el fichero**. No arranca nada todavía.
 
 ---
@@ -226,8 +228,9 @@ docker compose exec phenyxdb psql -U postgres -d postgres
 ## Seguridad
 
 - Las credenciales AWS **no deben** quedar persistidas en `.env`, scripts, ni en el historial de shell. Ciérralas con `unset` / `Remove-Item Env:...` o cierra la terminal tras instalar/actualizar.
-- Si aceptaste la contraseña de BD autogenerada por `install.sh`, anótala en tu gestor de secretos: está dentro del `docker-compose.yml`.
-- La contraseña del **usuario admin inicial** (`DEFAULT_USER_PASSWORD`) queda **en claro dentro del `docker-compose.yml`**. Solo se usa para crear el admin la primera vez; cambiarla después en el `docker-compose.yml` no cambia la contraseña del usuario ya creado (eso se hace desde la aplicación). Cambia la contraseña del admin desde la aplicación tras el primer login y protege el fichero `docker-compose.yml` (permisos restrictivos, no subirlo a repositorios).
+- El `docker-compose.yml` generado contiene **en claro** tanto las **credenciales de la base de datos** (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`) como la **contraseña del usuario admin inicial** (`DEFAULT_USER_PASSWORD`) y el `JWT_SECRET`. Protege el fichero con permisos restrictivos, no lo subas a repositorios y, si haces copias de seguridad del mismo, cífralas.
+- Si aceptaste la contraseña de BD autogenerada por `install.sh`, anótala en tu gestor de secretos: solo queda dentro del `docker-compose.yml`.
+- La contraseña del **usuario admin inicial** (`DEFAULT_USER_PASSWORD`) solo se usa para crear el admin la primera vez; cambiarla después en el `docker-compose.yml` **no** cambia la contraseña del usuario ya creado (eso se hace desde la aplicación). Cambia la contraseña del admin desde la aplicación tras el primer login.
 - Cambia el `JWT_SECRET` si por cualquier motivo dejó de ser secreto (re-ejecuta `install.sh`).
 
 ---
