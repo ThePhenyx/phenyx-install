@@ -2,7 +2,7 @@
 
 Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + PostgreSQL opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
 
-> **Motor de base de datos:** Phenyx Health requiere **PostgreSQL** (14 o superior recomendada). Puedes usar la instancia Postgres que despliega este paquete en un contenedor, o apuntar a un servidor PostgreSQL propio del hospital. Otros motores (MySQL, MariaDB, SQL Server, Oracle…) no están soportados.
+> **Motor de base de datos:** Phenyx Health requiere **PostgreSQL** (13 o superior). Puedes usar la instancia Postgres que despliega este paquete en un contenedor, o apuntar a un servidor PostgreSQL propio del hospital. Otros motores (MySQL, MariaDB, SQL Server, Oracle…) no están soportados.
 
 > **Importante:** sigue los pasos **en orden**. El único paso automatizado es la generación del `docker-compose.yml`; todo lo demás son comandos que tú ejecutas y revisas.
 
@@ -10,7 +10,7 @@ Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodas
 
 ## Qué vas a instalar
 
-Todo el sistema corre en **una sola máquina** del hospital (el servidor Docker). Los cuatro servicios (`phenyxfrontend`, `phenyxback`, `rodaskernel` y `phenyxdb`) son contenedores en la misma red interna de Docker Compose. Desde fuera **solo se expone el puerto del frontend**; el resto de servicios no son alcanzables desde la red del hospital.
+Todo el sistema corre en **una sola máquina** del hospital (el servidor Docker). Los cuatro servicios (`phenyxhealthfrontend`, `phenyxhealthbackend`, `rodaskernel` y `phenyxdb`) son contenedores en la misma red interna de Docker Compose. Desde fuera **solo se expone el puerto del frontend**; el resto de servicios no son alcanzables desde la red del hospital.
 
 El navegador de cada usuario habla únicamente con el frontend. Nginx (dentro del contenedor del frontend) sirve la SPA y actúa como proxy inverso: todas las llamadas a `/api/*` las redirige al backend por la red interna de Docker. Así el usuario ve un único origen HTTP(S) y no hay CORS entre navegador y backend.
 
@@ -19,24 +19,24 @@ El navegador de cada usuario habla únicamente con el frontend. Nginx (dentro de
        │
        │ http(s)    (único puerto público: el del frontend)
        ▼
-┌──────────────────────────────────────────────────────────┐
-│  Servidor Docker del hospital                            │
-│                                                          │
-│   phenyxfrontend ──► phenyxback ──┬─► rodaskernel        │
-│   (FRONTEND_PORT)      (interno)  │                      │
-│        nginx                      └─► phenyxdb           │
-│    /api/ → phenyxback:8080            o BD propia *      │
-│                                                          │
-│   Solo phenyxfrontend publica puerto en el host;         │
-│   el resto queda dentro de la red interna de Docker      │
-└──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  Servidor Docker del hospital                                    │
+│                                                                  │
+│   phenyxhealthfrontend ──► phenyxhealthbackend ──┬─► rodaskernel │
+│   (FRONTEND_PORT)          (interno)             │               │
+│        nginx                                     └─► phenyxdb    │
+│    /api/ → phenyxhealthbackend:8080                 o BD propia *│
+│                                                                  │
+│   Solo phenyxhealthfrontend publica puerto en el host;           │
+│   el resto queda dentro de la red interna de Docker              │
+└──────────────────────────────────────────────────────────────────┘
 
   * Si usas BD propia del hospital, `phenyxdb` no se despliega y
-    `phenyxback` se conecta a tu servidor Postgres por la red del
-    hospital (tu responsabilidad de red/firewall).
+    `phenyxhealthbackend` se conecta a tu servidor Postgres por la
+    red del hospital (tu responsabilidad de red/firewall).
 ```
 
-Solo `phenyxfrontend` publica un puerto en el host (`FRONTEND_PORT`). `phenyxback`, `rodaskernel` y la BD Postgres incluida **no publican puertos en el host**: solo son accesibles desde dentro de la red interna de Docker Compose (el frontend alcanza al backend como `phenyxback:8080`).
+Solo `phenyxhealthfrontend` publica un puerto en el host (`FRONTEND_PORT`). `phenyxhealthbackend`, `rodaskernel` y la BD Postgres incluida **no publican puertos en el host**: solo son accesibles desde dentro de la red interna de Docker Compose (el frontend alcanza al backend como `phenyxhealthbackend:8080`).
 
 ---
 
@@ -91,7 +91,7 @@ Preguntas que te hará:
 
   > **Aviso (contraseña en claro):** la contraseña que introduzcas queda **guardada en claro** dentro del `docker-compose.yml` generado (variable `DEFAULT_USER_PASSWORD`). Protege ese fichero (permisos restrictivos, copias de seguridad cifradas) y cambia la contraseña desde la aplicación tras el primer login.
 
-- **Base de datos** — el backend **solo soporta PostgreSQL** (versión 14 o superior recomendada). Otros motores (MySQL, MariaDB, SQL Server, Oracle…) **no** son compatibles. Elige entre:
+- **Base de datos** — el backend **solo soporta PostgreSQL** (versión 13 o superior). Otros motores (MySQL, MariaDB, SQL Server, Oracle…) **no** son compatibles. Elige entre:
   - **Incluida** (Postgres en un contenedor): la opción por defecto, para piloto/preproducción. No se publica puerto en el host; si necesitas conectarte con un cliente SQL, ver la sección **Conectarse a la BD incluida desde fuera**.
   - **Propia**: un servidor **PostgreSQL** que mantiene el hospital. Te pedirá `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`. En ese caso el `docker-compose.yml` **no** incluirá el servicio `phenyxdb`.
 
@@ -152,11 +152,11 @@ docker compose ps
 
 ## Paso 4 — Verificación
 
-1. Abre desde un navegador la URL del frontend (el `<host>:<puerto-host>` que expusiste para `phenyxfrontend`). Debe cargar la aplicación.
+1. Abre desde un navegador la URL del frontend (el `<host>:<puerto-host>` que expusiste para `phenyxhealthfrontend`). Debe cargar la aplicación.
 2. Comprueba que el frontend habla con el backend: abre la consola del navegador (F12 → Network) y verifica que las peticiones a `/api/...` (mismo host y puerto que el frontend) devuelven `200`.
 3. Revisa los logs del backend:
    ```bash
-   docker compose logs -f phenyxback
+   docker compose logs -f phenyxhealthbackend
    ```
    No debe haber errores de conexión a la base de datos.
 
@@ -182,7 +182,7 @@ No hace falta volver a ejecutar `install.sh` salvo que quieras cambiar algún da
 
 Si elegiste **BD propia** en el Paso 1:
 
-- **Debe ser PostgreSQL** (14 o superior recomendada). El backend no soporta otros motores.
+- **Debe ser PostgreSQL** (13 o superior). El backend no soporta otros motores.
 - El `docker-compose.yml` no incluye el servicio `phenyxdb` ni lo referencia en el `depends_on` del backend.
 - El usuario SQL que proporcionaste necesita privilegios para **crear tablas e índices** en la base de datos indicada (o equivalente; el esquema lo aplica el backend al arrancar).
 - Si la base de datos ya contiene datos de una instalación previa, contáctanos antes de arrancar: puede requerir migración.
@@ -195,8 +195,8 @@ Si elegiste **BD propia** en el Paso 1:
 | --- | --- | --- |
 | `no basic auth credentials` al hacer `pull` / `up` | Token ECR caducado (12 h) | Repetir **Paso 2** |
 | `port is already allocated` al `up` | Puerto del host ocupado | Re-ejecutar `install.sh` / `install.ps1` y responder con otro puerto |
-| `service "phenyxback" depends on undefined service "phenyxdb"` | Bloque `depends_on` incoherente | Re-ejecutar `install.sh` eligiendo de nuevo el tipo de BD |
-| Frontend carga pero `/api/...` devuelve 502 | El contenedor `phenyxback` no está levantado o falló al arrancar | `docker compose ps` y `docker compose logs phenyxback` |
+| `service "phenyxhealthbackend" depends on undefined service "phenyxdb"` | Bloque `depends_on` incoherente | Re-ejecutar `install.sh` eligiendo de nuevo el tipo de BD |
+| Frontend carga pero `/api/...` devuelve 502 | El contenedor `phenyxhealthbackend` no está levantado o falló al arrancar | `docker compose ps` y `docker compose logs phenyxhealthbackend` |
 | Backend con errores de conexión a BD | Credenciales / host / puerto erróneos, o firewall | Comprobar con `psql` desde el host Docker antes de reintentar |
 | `aws: command not found` | Falta AWS CLI v2 | Instalar desde https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html |
 | `docker compose: 'compose' is not a docker command` | Docker Compose v1 | Actualizar a Docker Engine reciente (incluye Compose v2) |
@@ -206,7 +206,7 @@ Comandos de diagnóstico útiles:
 ```bash
 docker compose config          # valida el YAML generado
 docker compose logs -f         # logs en vivo de todos los servicios
-docker compose logs phenyxback  # logs solo del backend
+docker compose logs phenyxhealthbackend  # logs solo del backend
 docker compose ps              # estado de los contenedores
 ```
 

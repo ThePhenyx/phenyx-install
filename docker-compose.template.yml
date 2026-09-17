@@ -25,7 +25,7 @@ services:
       - DEFAULT_USER_NAME=${DEFAULT_USER_NAME}
       - DEFAULT_USER_PASSWORD=${DEFAULT_USER_PASSWORD}
     # No publica puerto al host: el frontend lo alcanza por la red interna
-    # de Docker Compose (http://phenyxback:8080) vía el proxy /api/ de Nginx.
+    # de Docker Compose (http://phenyxhealthbackend:8080) vía el proxy /api/ de Nginx.
     depends_on:
       - rodaskernel
 # >>> PHENYX_DB_DEPENDS_START
