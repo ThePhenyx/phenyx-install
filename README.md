@@ -124,7 +124,15 @@ Import-Certificate -FilePath .\registry-ca.crt -CertStoreLocation Cert:\LocalMac
 docker login 54.217.115.82:5000
 ```
 
-En **macOS** con Docker Desktop, copia el certificado a `~/.docker/certs.d/54.217.115.82:5000/ca.crt`, reinicia Docker Desktop y haz el mismo `docker login`.
+**macOS (Docker Desktop):**
+```bash
+mkdir -p ~/.docker/certs.d/54.217.115.82:5000
+cp registry-ca.crt ~/.docker/certs.d/54.217.115.82:5000/ca.crt
+docker desktop restart
+docker login 54.217.115.82:5000
+```
+
+> En Mac no sirve el bloque de Linux: Docker Desktop corre dentro de una máquina virtual y no lee `/etc/docker/certs.d`, así que daría `x509: certificate signed by unknown authority`. Tampoco hace falta `sudo`. Si `docker desktop restart` no existe en tu versión de Docker Desktop, reinícialo desde el icono de la ballena → **Restart**.
 
 Debes ver `Login Succeeded`.
 
@@ -209,7 +217,7 @@ Si elegiste **BD propia** en el Paso 1:
 
 | Error | Causa | Solución |
 | --- | --- | --- |
-| `x509: certificate signed by unknown authority` | Docker no confía en el certificado del registro | Revisar que `registry-ca.crt` esté en la ruta del **Paso 2** (en Windows y macOS, reiniciar Docker después) |
+| `x509: certificate signed by unknown authority` | Docker no confía en el certificado del registro | Revisar que `registry-ca.crt` esté en la ruta del **Paso 2** que corresponde a tu sistema (en macOS es `~/.docker/certs.d`, no `/etc/docker/certs.d`) y, en Windows y macOS, reiniciar Docker después |
 | Timeout o `connection refused` contra `54.217.115.82:5000` | La salida al registro está cerrada, o no hemos autorizado la IP pública del servidor | Comprobar el firewall del hospital y confirmar con nosotros la IP de salida |
 | `no basic auth credentials` o `unauthorized` al hacer `pull` | No hay sesión iniciada en el registro (después del Paso 3 se cierra a propósito) | Repetir el `docker login` del **Paso 2** |
 | `up` intenta descargar y falla sin internet | Falta alguna imagen en local | Repetir el **Paso 3** con la salida abierta |
