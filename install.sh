@@ -16,12 +16,11 @@ echo
 missing=()
 command -v docker >/dev/null 2>&1 || missing+=("docker")
 docker compose version >/dev/null 2>&1 || missing+=("docker compose (v2)")
-command -v aws >/dev/null 2>&1 || missing+=("aws")
 if (( ${#missing[@]} > 0 )); then
   echo "AVISO: faltan las siguientes herramientas en este sistema:" >&2
   for m in "${missing[@]}"; do echo "  - $m" >&2; done
   echo "Puedes continuar generando el docker-compose.yml, pero necesitarás" >&2
-  echo "instalarlas antes de hacer login en ECR y arrancar el sistema." >&2
+  echo "instalarlas antes de hacer login en el registro y arrancar el sistema." >&2
   echo >&2
 fi
 
@@ -174,7 +173,9 @@ echo
 
 cat <<'EOF'
 === Siguientes pasos ===
-1. Haz login en ECR (ver README, sección "Paso 2 — Login en ECR").
+1. Con la salida a 54.217.115.82:5000 abierta, haz login en el registro y
+   descarga las imágenes (ver README, pasos 2 y 3). Después ya se puede
+   cerrar la salida a internet.
 2. Arranca el sistema:
      docker compose up -d
      docker compose ps

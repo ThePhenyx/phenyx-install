@@ -2,3 +2,4 @@ docker-compose.yml
 docker-compose.yml.bak-*
 phenyx-db-data
 phenyx-rodaskernel
+CREDENTIALS.md

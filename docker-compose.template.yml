@@ -1,6 +1,6 @@
 services:
   phenyxhealthfrontend:
-    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthfrontend:production
+    image: 54.217.115.82:5000/phenyxhealthfrontend:production
     container_name: phenyx-frontend
     restart: unless-stopped
     ports:
@@ -9,7 +9,7 @@ services:
       - phenyxhealthbackend
 
   phenyxhealthbackend:
-    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthbackend:production
+    image: 54.217.115.82:5000/phenyxhealthbackend:production
     container_name: phenyx-backend
     restart: unless-stopped
     environment:
@@ -33,7 +33,7 @@ services:
 # <<< PHENYX_DB_DEPENDS_END
 
   rodaskernel:
-    image: 471112885966.dkr.ecr.eu-west-1.amazonaws.com/phenyxhealthrodaskernel:production
+    image: 54.217.115.82:5000/phenyxhealthrodaskernel:production
     container_name: phenyx-rodaskernel
     restart: unless-stopped
     volumes:
@@ -41,7 +41,7 @@ services:
 
 # >>> PHENYX_DB_BLOCK_START
   phenyxdb:
-    image: postgres:13
+    image: 54.217.115.82:5000/postgres:13
     container_name: phenyx-db
     restart: unless-stopped
     environment:

@@ -19,12 +19,11 @@ else {
     try { docker compose version *> $null } catch { $missing += 'docker compose (v2)' }
     if ($LASTEXITCODE -ne 0) { $missing += 'docker compose (v2)' }
 }
-if (-not (Get-Command aws -ErrorAction SilentlyContinue)) { $missing += 'aws' }
 if ($missing.Count -gt 0) {
     Write-Warning "Faltan las siguientes herramientas:"
     $missing | ForEach-Object { Write-Warning "  - $_" }
     Write-Warning "Puedes continuar generando el docker-compose.yml, pero las"
-    Write-Warning "necesitarás antes de hacer login en ECR y arrancar el sistema."
+    Write-Warning "necesitarás antes de hacer login en el registro y arrancar el sistema."
     Write-Host ""
 }
 
@@ -158,7 +157,9 @@ Write-Host ""
 
 Write-Host @'
 === Siguientes pasos ===
-1. Haz login en ECR (ver README, sección "Paso 2 - Login en ECR").
+1. Con la salida a 54.217.115.82:5000 abierta, haz login en el registro y
+   descarga las imágenes (ver README, pasos 2 y 3). Después ya se puede
+   cerrar la salida a internet.
 2. Arranca el sistema:
      docker compose up -d
      docker compose ps

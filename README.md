@@ -1,6 +1,8 @@
 # Phenyx Health — Instalación en hospital
 
-Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + PostgreSQL opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de AWS ECR con las credenciales que te hemos facilitado.
+Este paquete instala la plataforma **Phenyx Health** (frontend + backend + rodaskernel + PostgreSQL opcional) en un servidor del hospital usando Docker Compose. Las imágenes se descargan desde el registro privado de Phenyx Health (`54.217.115.82:5000`) con las credenciales que te hemos facilitado.
+
+> **Servidor sin internet:** el servidor no necesita internet para funcionar. Solo durante la instalación debe tener salida a **una única IP**, la del registro (`54.217.115.82`, puerto TCP `5000`). Una vez descargadas las imágenes (Paso 3) se puede cerrar toda la salida: el sistema arranca y funciona sin conexión.
 
 > **Motor de base de datos:** Phenyx Health requiere **PostgreSQL** (13 o superior). Puedes usar la instancia Postgres que despliega este paquete en un contenedor, o apuntar a un servidor PostgreSQL propio del hospital. Otros motores (MySQL, MariaDB, SQL Server, Oracle…) no están soportados.
 
@@ -42,9 +44,9 @@ Solo `phenyxhealthfrontend` publica un puerto en el host (`FRONTEND_PORT`). `phe
 
 ## Requisitos
 
-- **Docker 24+** y **Docker Compose v2** (`docker compose`, no `docker-compose`).
-- **AWS CLI v2** — https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-- Conectividad saliente HTTPS a `*.amazonaws.com`.
+- **Docker 24+** y **Docker Compose v2** (`docker compose`, no `docker-compose`), ya instalados: la instalación de Docker no se hace desde el registro.
+- Durante la instalación, salida TCP al puerto `5000` de `54.217.115.82`. No hace falta DNS ni ningún otro destino.
+- **Antes de empezar, comunícanos la IP pública con la que saldrá el servidor**: el registro solo acepta conexiones de las IPs que autorizamos.
 - Un puerto libre en el host: por defecto `80` (frontend). El generador te deja elegir otro en el **Paso 1** si está ocupado. Backend, `rodaskernel` y Postgres incluido no se publican y no consumen puertos del host.
 
 ---
@@ -55,10 +57,10 @@ Recíbelos por el canal seguro acordado y tenlos a mano durante la instalación:
 
 | Dato | Valor |
 | --- | --- |
-| `AWS_ACCESS_KEY_ID` | (te lo hemos enviado) |
-| `AWS_SECRET_ACCESS_KEY` | (te lo hemos enviado) |
-| Región | `eu-west-1` |
-| Registro | `471112885966.dkr.ecr.eu-west-1.amazonaws.com` |
+| Registro | `54.217.115.82:5000` |
+| Usuario | (te lo hemos enviado) |
+| Contraseña | (te la hemos enviado) |
+| `registry-ca.crt` | Certificado de la autoridad que firma el registro (te lo hemos enviado). Cópialo al directorio de este paquete |
 
 Estas credenciales sirven **solo** para descargar las imágenes Docker; no dan acceso a ningún otro recurso.
 
@@ -101,40 +103,52 @@ El script solo **crea el fichero**. No arranca nada todavía.
 
 ---
 
-## Paso 2 — Login en ECR
+## Paso 2 — Confiar en el registro y hacer login
 
-Copia y pega el bloque correspondiente a tu sistema, sustituyendo los placeholders por las credenciales que te facilitamos.
+A partir de aquí necesitas la salida a `54.217.115.82:5000` abierta.
 
-> **Token temporal:** el `docker login` en ECR genera un token que dura **12 horas**. Si un `docker pull` o `docker compose up` falla con `no basic auth credentials`, repite este paso.
+El registro usa un certificado firmado por nuestra propia autoridad, así que primero hay que decirle a Docker que confíe en ella con el fichero `registry-ca.crt`. Después se hace `docker login`, que te pedirá el usuario y la contraseña que te facilitamos.
 
-**Windows (PowerShell):**
-```powershell
-$env:AWS_ACCESS_KEY_ID="AKIA..."
-$env:AWS_SECRET_ACCESS_KEY="..."
-$env:AWS_DEFAULT_REGION="eu-west-1"
-aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 471112885966.dkr.ecr.eu-west-1.amazonaws.com
-```
+> Haz el login con **el mismo usuario** del sistema con el que vas a lanzar `docker compose`: Docker guarda la sesión en el perfil de ese usuario.
 
-**Linux / macOS (bash):**
+**Linux:**
 ```bash
-export AWS_ACCESS_KEY_ID="AKIA..."
-export AWS_SECRET_ACCESS_KEY="..."
-export AWS_DEFAULT_REGION="eu-west-1"
-aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 471112885966.dkr.ecr.eu-west-1.amazonaws.com
+sudo install -d -m 0755 /etc/docker/certs.d/54.217.115.82:5000
+sudo install -m 0644 registry-ca.crt /etc/docker/certs.d/54.217.115.82:5000/ca.crt
+docker login 54.217.115.82:5000
 ```
 
-Debes ver `Login Succeeded`. Al terminar la sesión, borra las variables de tu terminal:
-
-```bash
-unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_DEFAULT_REGION   # Linux/macOS
-```
+**Windows (PowerShell como administrador):**
 ```powershell
-Remove-Item Env:AWS_ACCESS_KEY_ID, Env:AWS_SECRET_ACCESS_KEY, Env:AWS_DEFAULT_REGION   # Windows
+Import-Certificate -FilePath .\registry-ca.crt -CertStoreLocation Cert:\LocalMachine\Root
+# Reinicia Docker (Docker Desktop: Restart) para que lea el certificado
+docker login 54.217.115.82:5000
 ```
+
+En **macOS** con Docker Desktop, copia el certificado a `~/.docker/certs.d/54.217.115.82:5000/ca.crt`, reinicia Docker Desktop y haz el mismo `docker login`.
+
+Debes ver `Login Succeeded`.
 
 ---
 
-## Paso 3 — Arrancar el sistema
+## Paso 3 — Descargar las imágenes
+
+```bash
+docker compose pull
+docker image ls
+```
+
+`docker compose pull` descarga del registro todas las imágenes, Postgres incluido. `docker image ls` debe listar las de `54.217.115.82:5000` (`phenyxhealthfrontend`, `phenyxhealthbackend` y `phenyxhealthrodaskernel`, más `postgres` si elegiste la BD incluida). Cuando termine sin errores, cierra la sesión del registro, que ya no hace falta:
+
+```bash
+docker logout 54.217.115.82:5000
+```
+
+**En este punto ya se puede cerrar la salida a internet del servidor.** Los pasos siguientes no necesitan conexión.
+
+---
+
+## Paso 4 — Arrancar el sistema
 
 ```bash
 docker compose up -d
@@ -150,7 +164,7 @@ docker compose ps
 
 ---
 
-## Paso 4 — Verificación
+## Paso 5 — Verificación
 
 1. Abre desde un navegador la URL del frontend (el `<host>:<puerto-host>` que expusiste para `phenyxhealthfrontend`). Debe cargar la aplicación.
 2. Comprueba que el frontend habla con el backend: abre la consola del navegador (F12 → Network) y verifica que las peticiones a `/api/...` (mismo host y puerto que el frontend) devuelven `200`.
@@ -166,13 +180,16 @@ docker compose ps
 
 Cuando publiquemos una nueva versión de las imágenes:
 
-1. Repite el **Paso 2 (Login en ECR)** — el token anterior habrá caducado.
-2. Descarga las nuevas imágenes y recrea los contenedores:
+1. Vuelve a abrir la salida a `54.217.115.82:5000` (puerto TCP `5000`). Si la IP pública del servidor ha cambiado, comunícanosla antes.
+2. Haz `docker login 54.217.115.82:5000` como en el **Paso 2**. El certificado ya está instalado y no hay que repetirlo.
+3. Descarga las nuevas imágenes, cierra la sesión y recrea los contenedores:
    ```bash
    docker compose pull
+   docker logout 54.217.115.82:5000
    docker compose up -d
    docker compose ps
    ```
+4. Vuelve a cerrar la salida a internet.
 
 No hace falta volver a ejecutar `install.sh` salvo que quieras cambiar algún dato (puerto público, contraseña de BD, etc.).
 
@@ -193,12 +210,14 @@ Si elegiste **BD propia** en el Paso 1:
 
 | Error | Causa | Solución |
 | --- | --- | --- |
-| `no basic auth credentials` al hacer `pull` / `up` | Token ECR caducado (12 h) | Repetir **Paso 2** |
+| `x509: certificate signed by unknown authority` | Docker no confía en el certificado del registro | Revisar que `registry-ca.crt` esté en la ruta del **Paso 2** (en Windows y macOS, reiniciar Docker después) |
+| Timeout o `connection refused` contra `54.217.115.82:5000` | La salida al registro está cerrada, o no hemos autorizado la IP pública del servidor | Comprobar el firewall del hospital y confirmar con nosotros la IP de salida |
+| `no basic auth credentials` o `unauthorized` al hacer `pull` | No hay sesión iniciada en el registro (después del Paso 3 se cierra a propósito) | Repetir el `docker login` del **Paso 2** |
+| `up` intenta descargar y falla sin internet | Falta alguna imagen en local | Repetir el **Paso 3** con la salida abierta |
 | `port is already allocated` al `up` | Puerto del host ocupado | Re-ejecutar `install.sh` / `install.ps1` y responder con otro puerto |
 | `service "phenyxhealthbackend" depends on undefined service "phenyxdb"` | Bloque `depends_on` incoherente | Re-ejecutar `install.sh` eligiendo de nuevo el tipo de BD |
 | Frontend carga pero `/api/...` devuelve 502 | El contenedor `phenyxhealthbackend` no está levantado o falló al arrancar | `docker compose ps` y `docker compose logs phenyxhealthbackend` |
 | Backend con errores de conexión a BD | Credenciales / host / puerto erróneos, o firewall | Comprobar con `psql` desde el host Docker antes de reintentar |
-| `aws: command not found` | Falta AWS CLI v2 | Instalar desde https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html |
 | `docker compose: 'compose' is not a docker command` | Docker Compose v1 | Actualizar a Docker Engine reciente (incluye Compose v2) |
 
 Comandos de diagnóstico útiles:
@@ -228,7 +247,8 @@ docker compose exec phenyxdb psql -U postgres -d postgres
 
 ## Seguridad
 
-- Las credenciales AWS **no deben** quedar persistidas en `.env`, scripts, ni en el historial de shell. Ciérralas con `unset` / `Remove-Item Env:...` o cierra la terminal tras instalar/actualizar.
+- La contraseña del registro **no debe** quedar en ficheros, scripts ni en el historial de shell: escríbela solo cuando la pida `docker login` y cierra la sesión con `docker logout` al terminar de descargar.
+- Cierra la salida a `54.217.115.82:5000` en cuanto termines de instalar o actualizar.
 - El `docker-compose.yml` generado contiene **en claro** tanto las **credenciales de la base de datos** (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`) como la **contraseña del usuario admin inicial** (`DEFAULT_USER_PASSWORD`) y el `JWT_SECRET`. Protege el fichero con permisos restrictivos, no lo subas a repositorios y, si haces copias de seguridad del mismo, cífralas.
 - Si aceptaste la contraseña de BD autogenerada por `install.sh`, anótala en tu gestor de secretos: solo queda dentro del `docker-compose.yml`.
 - La contraseña del **usuario admin inicial** (`DEFAULT_USER_PASSWORD`) solo se usa para crear el admin la primera vez; cambiarla después en el `docker-compose.yml` **no** cambia la contraseña del usuario ya creado (eso se hace desde la aplicación). Cambia la contraseña del admin desde la aplicación tras el primer login.
