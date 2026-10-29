@@ -60,7 +60,6 @@ Recíbelos por el canal seguro acordado y tenlos a mano durante la instalación:
 | Registro | `54.217.115.82:5000` |
 | Usuario | (te lo hemos enviado) |
 | Contraseña | (te la hemos enviado) |
-| `registry-ca.crt` | Certificado de la autoridad que firma el registro (te lo hemos enviado). Cópialo al directorio de este paquete |
 
 Estas credenciales sirven **solo** para descargar las imágenes Docker; no dan acceso a ningún otro recurso.
 
@@ -107,7 +106,7 @@ El script solo **crea el fichero**. No arranca nada todavía.
 
 A partir de aquí necesitas la salida a `54.217.115.82:5000` abierta.
 
-El registro usa un certificado firmado por nuestra propia autoridad, así que primero hay que decirle a Docker que confíe en ella con el fichero `registry-ca.crt`. Después se hace `docker login`, que te pedirá el usuario y la contraseña que te facilitamos.
+El registro usa un certificado firmado por nuestra propia autoridad, así que primero hay que decirle a Docker que confíe en ella con el fichero `registry-ca.crt`, incluido en este paquete. Es un certificado público: no contiene ninguna clave. Después se hace `docker login`, que te pedirá el usuario y la contraseña que te facilitamos.
 
 > Haz el login con **el mismo usuario** del sistema con el que vas a lanzar `docker compose`: Docker guarda la sesión en el perfil de ese usuario.
 
