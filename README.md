@@ -118,6 +118,9 @@ docker login 54.217.115.82:5000
 ```
 
 **Windows (PowerShell como administrador):**
+
+> Abre PowerShell con clic derecho → **Ejecutar como administrador**; si no, `Import-Certificate` falla con `Acceso denegado`. Si Windows te pide la contraseña de **otra** cuenta para elevar, importa el certificado en esa ventana, pero haz el `docker login` y el resto de pasos en una PowerShell normal con tu usuario.
+
 ```powershell
 Import-Certificate -FilePath .\registry-ca.crt -CertStoreLocation Cert:\LocalMachine\Root
 # Reinicia Docker (Docker Desktop: Restart) para que lea el certificado
@@ -217,6 +220,7 @@ Si elegiste **BD propia** en el Paso 1:
 
 | Error | Causa | Solución |
 | --- | --- | --- |
+| `Import-Certificate : Acceso denegado` (`0x80070005`, `E_ACCESSDENIED`) en Windows | La PowerShell no se abrió como administrador: importar en `Cert:\LocalMachine\Root` afecta a todo el equipo | Abrir PowerShell con clic derecho → **Ejecutar como administrador**, ir a la carpeta del paquete (entre comillas si la ruta tiene espacios) y repetir el `Import-Certificate` del **Paso 2** |
 | `x509: certificate signed by unknown authority` | Docker no confía en el certificado del registro | Revisar que `registry-ca.crt` esté en la ruta del **Paso 2** que corresponde a tu sistema (en macOS es `~/.docker/certs.d`, no `/etc/docker/certs.d`) y, en Windows y macOS, reiniciar Docker después |
 | Timeout o `connection refused` contra `54.217.115.82:5000` | La salida al registro está cerrada, o no hemos autorizado la IP pública del servidor | Comprobar el firewall del hospital y confirmar con nosotros la IP de salida |
 | `no basic auth credentials` o `unauthorized` al hacer `pull` | No hay sesión iniciada en el registro (después del Paso 3 se cierra a propósito) | Repetir el `docker login` del **Paso 2** |
