@@ -79,10 +79,15 @@ Write-Host "del docker-compose.yml generado. Protege ese fichero (permisos,"
 Write-Host "copias de seguridad) y cambia la contrasena desde la propia aplicacion"
 Write-Host "despues del primer login."
 $DEFAULT_USER_NAME = Prompt-Default "Nombre de usuario admin" "admin"
-$DEFAULT_USER_PASSWORD = Prompt-Secret "Contrasena del admin"
-if ([string]::IsNullOrEmpty($DEFAULT_USER_PASSWORD)) {
-    Write-Error "La contrasena del admin no puede estar vacia"
-    exit 1
+$MinPasswordLength = 8
+foreach ($attempt in 1..3) {
+    $DEFAULT_USER_PASSWORD = Prompt-Secret "Contrasena del admin (minimo $MinPasswordLength caracteres)"
+    if ($DEFAULT_USER_PASSWORD.Length -ge $MinPasswordLength) { break }
+    Write-Warning "La contrasena del admin debe tener al menos $MinPasswordLength caracteres."
+    if ($attempt -eq 3) {
+        Write-Error "No se ha introducido una contrasena valida para el admin"
+        exit 1
+    }
 }
 Write-Host ""
 

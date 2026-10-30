@@ -86,7 +86,7 @@ Preguntas que te hará:
 
 - **JWT secret** — por defecto se genera uno aleatorio fuerte; recomendado aceptarlo.
 
-- **Usuario admin inicial** — nombre y contraseña con los que se creará el usuario administrador la **primera vez** que el backend arranque contra una base de datos vacía. Por defecto el nombre es `admin`.
+- **Usuario admin inicial** — nombre y contraseña con los que se creará el usuario administrador la **primera vez** que el backend arranque contra una base de datos vacía. Por defecto el nombre es `admin`. La contraseña debe tener **al menos 8 caracteres**: si es más corta, el generador la vuelve a pedir, y tras tres intentos fallidos se detiene sin crear el fichero.
 
   > **Aviso (creación única):** el usuario admin se crea **solo** cuando el backend encuentra la base de datos vacía. Una vez creado, volver a ejecutar `docker compose up -d` **no** vuelve a crearlo ni actualiza su contraseña, aunque cambies `DEFAULT_USER_NAME` o `DEFAULT_USER_PASSWORD` en el `docker-compose.yml`. A partir de ese momento, los cambios de usuario/contraseña se hacen **desde la propia aplicación**. Lo mismo aplica si apuntas a una BD propia que ya contiene usuarios: estas variables se ignoran.
 
@@ -124,6 +124,7 @@ docker login 54.217.115.82:5000
 ```powershell
 Import-Certificate -FilePath .\registry-ca.crt -CertStoreLocation Cert:\LocalMachine\Root
 # Reinicia Docker (Docker Desktop: Restart) para que lea el certificado
+# y espera a que Docker Desktop indique "Engine running" antes de seguir
 docker login 54.217.115.82:5000
 ```
 
@@ -222,6 +223,7 @@ Si elegiste **BD propia** en el Paso 1:
 | --- | --- | --- |
 | `Import-Certificate : Acceso denegado` (`0x80070005`, `E_ACCESSDENIED`) en Windows | La PowerShell no se abrió como administrador: importar en `Cert:\LocalMachine\Root` afecta a todo el equipo | Abrir PowerShell con clic derecho → **Ejecutar como administrador**, ir a la carpeta del paquete (entre comillas si la ruta tiene espacios) y repetir el `Import-Certificate` del **Paso 2** |
 | `x509: certificate signed by unknown authority` | Docker no confía en el certificado del registro | Revisar que `registry-ca.crt` esté en la ruta del **Paso 2** que corresponde a tu sistema (en macOS es `~/.docker/certs.d`, no `/etc/docker/certs.d`) y, en Windows y macOS, reiniciar Docker después |
+| `open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified` en Windows (el `docker login` sí funciona) | Docker Desktop no está arrancado o aún se está iniciando: `docker login` no necesita el motor de Docker, pero `pull` y `up` sí | Abrir Docker Desktop, esperar a que indique **Engine running** y comprobar que `docker version` muestra la sección `Server:`. Si no arranca, ejecutar `wsl --update` en una PowerShell de administrador y reiniciar el equipo. Docker debe estar en modo de contenedores Linux: el menú de la ballena tiene que ofrecer **Switch to Windows containers…** |
 | Timeout o `connection refused` contra `54.217.115.82:5000` | La salida al registro está cerrada, o no hemos autorizado la IP pública del servidor | Comprobar el firewall del hospital y confirmar con nosotros la IP de salida |
 | `no basic auth credentials` o `unauthorized` al hacer `pull` | No hay sesión iniciada en el registro (después del Paso 3 se cierra a propósito) | Repetir el `docker login` del **Paso 2** |
 | `up` intenta descargar y falla sin internet | Falta alguna imagen en local | Repetir el **Paso 3** con la salida abierta |

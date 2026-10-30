@@ -78,11 +78,18 @@ echo "del docker-compose.yml generado. Protege ese fichero (permisos,"
 echo "copias de seguridad) y cambia la contraseña desde la propia aplicación"
 echo "después del primer login."
 DEFAULT_USER_NAME=$(prompt_default "Nombre de usuario admin" "admin")
-DEFAULT_USER_PASSWORD=$(prompt_secret "Contraseña del admin")
-if [[ -z "$DEFAULT_USER_PASSWORD" ]]; then
-  echo "ERROR: la contraseña del admin no puede estar vacía" >&2
-  exit 1
-fi
+MIN_PASSWORD_LENGTH=8
+for attempt in 1 2 3; do
+  DEFAULT_USER_PASSWORD=$(prompt_secret "Contraseña del admin (mínimo $MIN_PASSWORD_LENGTH caracteres)")
+  if (( ${#DEFAULT_USER_PASSWORD} >= MIN_PASSWORD_LENGTH )); then
+    break
+  fi
+  echo "La contraseña del admin debe tener al menos $MIN_PASSWORD_LENGTH caracteres." >&2
+  if (( attempt == 3 )); then
+    echo "ERROR: no se ha introducido una contraseña válida para el admin" >&2
+    exit 1
+  fi
+done
 echo
 
 echo "--- Base de datos ---"
